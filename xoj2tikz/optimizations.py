@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of xoj2tikz.
-# Copyright (C) 2012 Fabian Henze
+# Copyright (C) 2012 Fabian Henze, Simon Vetter
 # 
 # xoj2tikz is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,22 +37,34 @@ def detectCircle(stroke):
     This function detects circles and converts these strokes.
     """
     s = 0
-    if len(stroke.coordList) > 3 and stroke.coordList[-1] == stroke.coordList[0]:
+    if len(stroke.coordList) > 5 and stroke.coordList[-1] == stroke.coordList[0]:
         originX = stroke.coordList[0][0] + (stroke.coordList[math.ceil((len(stroke.coordList)-1)/2)][0] - stroke.coordList[0][0]) / 2
         originY = stroke.coordList[0][1] + (stroke.coordList[math.ceil((len(stroke.coordList)-1)/2)][1] - stroke.coordList[0][1]) / 2
         radius = math.sqrt((originX - stroke.coordList[0][0]) ** 2 + (originY - stroke.coordList[0][1]) ** 2)
         while (s < len(stroke.coordList)-2): 
             if math.fabs(radius - math.sqrt((originX - stroke.coordList[s][0]) ** 2 + (originY - stroke.coordList[s][1]) ** 2)) > 2:
-                return
+                return stroke
             s += 1
-        # Circle(stroke.color, originX, originY, radius, stroke.width);
-
+        stroke = Circle(stroke.color, originX, originY, radius, stroke.width)
+    return stroke
+    
 def detectRectangle(stroke):
-    pass
+    """
+    Detecting Rectangles.
+    """
+    if isinstance(stroke, Stroke):
+        s = 0
+        if len(stroke.coordList) == 5 and stroke.coordList[-1] == stroke.coordList[0]:
+            while (s < len(stroke.coordList)-1):
+                if (stroke.coordList[s][0] != stroke.coordList[s+1][0]) and (stroke.coordList[s][1] != stroke.coordList[s+1][1]):
+                    return stroke
+                s += 1
+            return Rectangle(stroke.color, stroke.coordList[0][0], stroke.coordList[0][1], stroke.coordList[2][0], stroke.coordList[2][1], stroke.width)
+    return stroke
 
 def simplifyStrokes(stroke):
     """
-    This function combines collinear Strokes into one single Stroke.
+    Detect collinear parts of a stroke and remove them.
     """
     s = 0
     while (s < len(stroke.coordList)-2): 
@@ -67,29 +79,19 @@ def simplifyStrokes(stroke):
                     del stroke.coordList[s+1]
         else:
             s += 1
-        
-def runAll(obj):
+    return stroke
+
+def runAll(document):
     """
-    This is a recursive function. You can throw any list or instance of
-    Page, Layer, Stroke and so on at it and it will run all optimization
-    algorithms on it.
+    Iterate over a list of pages and run all optimization algorithms on them.
     """
-    if isinstance(obj, list):
-        for item in obj:
-            runAll(item)
-    elif isinstance(obj, Page):
-        runAll(obj.layerList)
-    elif isinstance(obj, Layer):
-        runAll(obj.itemList)
-    elif isinstance(obj, Stroke):
-        detectCircle(obj)
-        detectRectangle(obj)
-        simplifyStrokes(obj)
-    elif isinstance(obj, TextBox):
-        pass
-    elif isinstance(obj, Rectangle):
-        pass
-    elif isinstance(obj, Circle):
-        pass
-    else:
-        print("Warning: Unknown Type, not optimizing", file=sys.stderr)
+    for page in document:
+        for layer in page.layerList:
+            inplace_map(simplifyStrokes, layer.itemList)
+            inplace_map(detectCircle, layer.itemList)
+            inplace_map(detectRectangle, layer.itemList)
+
+def inplace_map(function, iterable):
+    """Similar to pythons map() builtin, but it works in-place."""
+    for i, item in enumerate(iterable):
+        iterable[i] = function(item)
