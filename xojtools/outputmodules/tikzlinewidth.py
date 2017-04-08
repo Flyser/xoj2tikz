@@ -33,6 +33,7 @@ class TikzLineWidth(OutputModule):
         Open a tikzpicture environment and define a style for variable width
         lines.
         """
+        self.pagecnt = 0
         colorList = []
         newline = ""
         self.write(\
@@ -46,8 +47,9 @@ class TikzLineWidth(OutputModule):
     },
   },
   t/.initial=0.4pt,
-}
-\\begin{tikzpicture}[yscale=-1, y=1pt, x=1pt, every path/.style={line cap=round, line join=round}]\n""")
+}\n""")
+        self.tex_beginpicture = """\\begin{tikzpicture}[yscale=-1, y=1pt, x=1pt, every path/.style={line cap=round, line join=round}]\n"""
+        self.tex_definecolor = ""
         for page in self.document:
             for layer in page.layerList:
                 for item in layer.itemList:
@@ -58,12 +60,25 @@ class TikzLineWidth(OutputModule):
                         g = item.color[1]/255.0
                         b = item.color[2]/255.0
                         texColor = self.toTexColor(item.color)
-                        self.write("  \\definecolor{{{}}}{{rgb}}{{{:.4},{:.4},"
-                                   "{:.4}}}\n".format(texColor, r, g, b))
+                        self.tex_definecolor += "  \\definecolor{{{}}}{{rgb}}{{{:.4},{:.4},{:.4}}}\n".format(texColor, r, g, b)
                         colorList.append(self.toTexColor(item.color))
                         newline = '\n'
-        self.write(newline)
+        self.tex_definecolor += newline
 
+    def page(self, page):
+        """
+        Output pages, with one tikzpicture for each page.
+        """
+        self.currentPage = page
+        for layer in page.layerList:
+            self.pagecnt += 1
+            self.write("\n%% Page %s\n" % self.pagecnt)
+            if self.pagecnt > 1:
+                self.footer()
+                self.write("\n\clearpage\n\n")
+            self.write(self.tex_beginpicture)
+            self.write(self.tex_definecolor)
+            self.layer(layer)
 
     def stroke(self, stroke):
         """
