@@ -108,10 +108,7 @@ def main():
     if args.optimize:
         optimizations.runAll(document)
     
-    if DEBUG:
-        output = Output.TikzDebug(document, output=args.outputfile)
-    else:
-        output = Output.TikzLineWidth(document, output=args.outputfile)
+    output = Output.svg(document, output=args.outputfile)
     output.printAll()
     
     if args.outputfile is not sys.stdout and not args.outputfile.isatty():
