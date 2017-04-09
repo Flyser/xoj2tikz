@@ -2,7 +2,9 @@
 # xoj2pdf.sh -- converts a .xoj file to a pdf using latexmk and pdflatex
 set -i
 
-TEMPFILE="$(mktemp --tmpdir=/tmp xoj2pdf-XXXXXXXX.tex)"
+# TEMPFILE="$(mktemp --tmpdir=/tmp xoj2pdf-XXXXXXXX.tex)"
+# TEMPFILE="$(mktemp xoj2pdf-XXXXXXXX.tex)"
+TEMPFILE="xojtmp.tex"
 
 cd "$(dirname "$0")"
 WORKDIR="$(pwd)"
@@ -34,5 +36,5 @@ if which rubber-info >/dev/null; then
   echo
 fi
 latexmk -c "$TEMPFILE" &>/dev/null
-rm "$TEMPFILE"
+# rm "$TEMPFILE"
 mv -v "${TEMPFILE%.tex}.pdf" "${WORKDIR}/${1%.xoj}.pdf"

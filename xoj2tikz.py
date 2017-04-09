@@ -102,6 +102,8 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
+    sys.stderr.write("document has %s pages\n" % len(document))
+
     
     if args.optimize:
         optimizations.runAll(document)

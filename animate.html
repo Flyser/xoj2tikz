@@ -1,0 +1,51 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="animate.css">
+<script type="text/javascript" src="//cdn.jsdelivr.net/vivus/latest/vivus.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+
+<div id="my-div"></div>
+<div id="pagenum"></div>
+
+<script>
+function pad(num, size){
+    return ('000000000' + num).substr(-size);
+};
+
+var myv;
+
+$.fn.scrollView = function () {
+    return this.each(function () {
+        $('html, body').animate({
+            scrollTop: $(this).offset().top
+        }, 1);
+    });
+}
+
+animate_page = function(pnum, whendone){
+    var fname = "/page" + pad(pnum, 2) + ".svg";
+    $('#pagenum').html(fname);
+    scrollit = function(){
+	$('#page' + pnum).scrollView();
+	myv.play();
+    }
+    myv = new Vivus('my-div', {duration: 600, type: 'oneByOne', onReady: scrollit, file: fname, start: 'manual'}, whendone);
+}
+
+the_page = 0;
+show_page = function(){
+    the_page += 1;
+    animate_page(the_page, clear_page);
+}
+clear_page = function(){
+    setTimeout(next_page, 1000);
+}
+next_page = function(){
+    myv.reset();
+    show_page();
+}
+
+show_page();
+</script>
